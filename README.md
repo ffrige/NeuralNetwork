@@ -155,7 +155,6 @@ Example of use:
 ---------------
 
     import numpy as np
-    import matplotlib.pyplot as plt
     from NN import NeuralNetwork
     
     #build network with one input value, one hidden layer of 20 units, and one output value
@@ -165,7 +164,7 @@ Example of use:
      
     #train network
     model.train(training_set_inputs,training_set_targets,learning_rate=0.01,epochs=1000,batch_size=64,
-                dropout=0.6,validation_size=0.2,optimizer='sgd',logger=False,plot=True,gradCheck=False)
+                dropout=1.0,validation_size=0.2,optimizer='sgd',logger=False,plot=True,gradCheck=False)
     
     #show results
     model.predict([0.2])
