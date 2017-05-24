@@ -5,7 +5,7 @@ This is a simple implementation of a feed-forward neural network in Python. The 
 
 **FEATURES:**
 -	Build custom networks with any layer and units size
--	Sigmoid or ReLU non-linearities
+-	Sigmoid, ReLU, Linear, Softmax activation functions
 -	Trains with mini-batch gradient descent
 -	Gradient check option
 -	Rmsprop
@@ -13,8 +13,6 @@ This is a simple implementation of a feed-forward neural network in Python. The 
 
 **TODO:**
 -	Fix dropout during backprop
--	Add other loss functions
--	Add softmax non- linearity
 -	Add convolutional layers
 -	Add more weights initialization options
 -	Add other weights regularizations (e.g. L2)
@@ -65,21 +63,25 @@ biasGrad dbj: gradients of biases, updated as dwj += ej * f’(xj) / batch_size.
 
 **Private Methods:**
 
-sigmoid(x): sigmoid activation function
+*sigmoid*(x): sigmoid activation function
 
-sigmoid_derivative(x): derivative of the sigmoid activation function
+*sigmoid_derivative*(x): derivative of the sigmoid activation function
 
-relu(x): rectified linear unit activation function
+*relu*(x): rectified linear unit activation function
 
-relu_derivative(x): derivative of the relu activation function
+*relu_derivative*(x): derivative of the relu activation function
 
-linear(x): linear activation function
+*linear*(x): linear activation function
 
-linear_derivative(x): derivative of the linear activation function
+*linear_derivative*(x): derivative of the linear activation function
 
-activation_function(x): calculate activation function according to layer class attribute “activation”
+*softmax*(x): softmax activation function
 
-activation_function_derivative(x): calculate derivative of activation function according to layer class attribute “activation”
+*softmax_derivative*(x): derivative of the softmax activation function
+
+*activation_function*(x): calculate activation function according to layer class attribute “activation”
+
+*activation_function_derivative*(x): calculate derivative of activation function according to layer class attribute “activation”
 
 **Public Methods:**
 
@@ -130,6 +132,8 @@ NeuralNetwork Class
 
 *lossFunction*(input_values, target_values, metrics="mse"): evaluates the current loss of the network given a set of input and target values. The mean square error is used as default metric.
 
+*lossFunctionDerivative*(output_values, target_values, metrics="mse"): evaluates the derivative of the loss function given a set of predictions and target values.
+
 *numGrad*(X, y, batch_size): calculates the numerical gradients of the loss function w.r.t. all weights and biases
 
 **Public Methods:**
@@ -145,7 +149,7 @@ addLayer(units, activation): appends a new layer at the end of the network, with
 
 *predict*(inputs): calculates the network’s output values given the specified input values.
 
-*train*(training_set_inputs, training_set_targets, learning_rate, optimizer="rmsprop", metric="mse", validation_size=0.2, dropout=1, epochs=1, batch_size=1, logger=False, plot=False, gradCheck=False): trains the weights of the network according to the given input and target values.
+*train*(training_set_inputs, training_set_targets, learning_rate, optimizer="rmsprop", cost="mse", validation_size=0.2, dropout=1, epochs=1, batch_size=1, logger=False, plot=False, gradCheck=False): trains the weights of the network according to the given input and target values.
 
 *setScaler*(mean, variance): sets the mean and variance to scale the input values (TODO)
 

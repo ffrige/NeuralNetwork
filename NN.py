@@ -19,16 +19,44 @@ class NeuralNetwork:
     PRIVATE METHODS
     """
 
-    def __lossFunction(self,input_values,target_values,metrics="mse"):
-        #TODO - use other metrics
+    def __lossFunction(self,input_values,target_values,cost="mse"):
         tmpLoss = 0
-        if metrics=="mse":
+        if input_values.shape[0] < 1:
+            return 0
+
+        if cost=="mse":  #Mean Square Error
             #go through each training example
             for X, y in zip(input_values, target_values):
-                tmpLoss += (y-self.predict(X))**2
+                tmpLoss += (y-self.predict(X))**2  #TODO - why do we need to predict outputs again here? Can it be optimized?
             return tmpLoss/input_values.shape[0]
+
+        elif cost=="log": #Log Likelihood
+            #go through each training example
+            for X, y in zip(input_values, target_values):
+                predictions = self.predict(X)
+                hot_encoded = np.zeros_like(predictions)
+                hot_encoded[y] = 1
+                tmpLoss -= hot_encoded*np.log(predictions)
+            return tmpLoss/input_values.shape[0]
+            
         else:
             assert False,"Unknown loss function!"
+
+    def __lossFunctionDerivative(self,output_values,target_values,cost="mse"):
+        
+        if cost=="mse":  #Mean Square Error
+            return (target_values-output_values)
+
+        elif cost=="log": #Log Likelihood
+            hot_encoded = np.zeros_like(output_values)
+            py = output_values[target_values]
+            hot_encoded[target_values] = -1/py.flat[0]
+            return hot_encoded.flatten()
+            
+        else:
+            assert False,"Unknown loss function!"
+
+
     
     def __numGrad(self,X,y,batch_size):
         delta = 1e-6
@@ -95,7 +123,7 @@ class NeuralNetwork:
     
     def predict(self,inputs):
 	#check input size
-        assert (len(inputs)==self.input_size), "Input size is not correct!"
+        assert (len(inputs)==self.input_size), "Input size is not correct! Expected %d, given %d" %(self.input_size,len(inputs))
         assert (self.nb_layers > 0), "No output layer defined!"
         
         self.Layer[1].setInput(inputs)
@@ -105,12 +133,11 @@ class NeuralNetwork:
 
         return self.Layer[self.nb_layers].getOutput()
     
-    def train(self,training_set_inputs,training_set_targets,learning_rate,optimizer="rmsprop",metric="mse",
+    def train(self,training_set_inputs,training_set_targets,learning_rate,optimizer="sgd",cost="mse",
               validation_size=0,dropout=1,epochs=1,batch_size=1,logger=False,plot=False,gradCheck=False):
 
         #check parameters
-        assert(training_set_inputs.shape[1] == self.input_size), "Size of training input values is not correct!"
-        assert(training_set_targets.shape[1] == self.Layer[self.nb_layers].getUnits()), "Size of training target values is not correct!"
+        assert(training_set_inputs.shape[1] == self.input_size), "Size of training input values is not correct! Expected %d, given %d" % (self.input_size, training_set_inputs.shape[1])
         assert(training_set_inputs.shape[0] == training_set_targets.shape[0]), "Size of input and target values must be equal!"
         assert(self.nb_layers > 0), "No output layer defined!"
         assert(epochs > 0), "At least 1 epoch required!"
@@ -118,7 +145,6 @@ class NeuralNetwork:
 
         train_loss = []
         validation_loss = []
-        test_result = []
         grad_diffWeight = []
         grad_diffBias = []
         grad_Weight = []
@@ -133,7 +159,7 @@ class NeuralNetwork:
         training_set_inputs = np.delete(training_set_inputs, validation, 0)
         training_set_targets = np.delete(training_set_targets, validation, 0)
         n_examples = training_set_inputs.shape[0]
-        
+            
         #repeat for all epochs
         for epoch in range(epochs):
 
@@ -167,7 +193,10 @@ class NeuralNetwork:
                         self.Layer[i+1].setInput(self.Layer[i].getOutput(dropout))
                     
                     #calculate error
-                    output_error = y - self.Layer[self.nb_layers].getOutput()
+                    #TODO - use loss function derivative
+                    output_error = self.__lossFunctionDerivative(self.Layer[self.nb_layers].getOutput(),y)
+                    #output_error = y - self.Layer[self.nb_layers].getOutput()
+                    
 
                     #backward pass
                     for i in range(self.nb_layers,0,-1):
@@ -200,9 +229,8 @@ class NeuralNetwork:
                             assert False,"Learning aborted!"                    
 
             #update losses at the end of each epoch
-            train_loss.append(self.__lossFunction(batch_inputs,batch_targets))
-            validation_loss.append(self.__lossFunction(validation_inputs,validation_targets))
-            test_result.append(self.predict([0.2]))
+            train_loss.append(self.__lossFunction(training_set_inputs,training_set_targets,cost))
+            validation_loss.append(self.__lossFunction(validation_inputs,validation_targets,cost))
             grad_Weight.append(np.mean(gradients[0]))
             grad_Bias.append(np.mean(gradients[1]))
 
@@ -214,8 +242,6 @@ class NeuralNetwork:
         if plot:
             plt.plot(train_loss)
             plt.plot(validation_loss)
-            plt.show()
-            plt.plot(test_result)
             plt.show()
    
     def setScaler(self,mean=0,variance=1):

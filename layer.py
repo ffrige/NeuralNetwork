@@ -47,7 +47,18 @@ class Layer:
         return x
 
     def __linear_derivative(self,x):
-        return 1
+        return np.ones_like(x)
+
+    def __softmax(self,x):
+        #Compute the softmax of vector x in a numerically stable way
+        shiftx = x - np.max(x)
+        exps = np.exp(shiftx)
+        return exps / np.sum(exps)
+
+    def __softmax_derivative(self,x):
+        Sz = self.__softmax(x)
+        D = -np.outer(Sz, Sz) + np.diag(Sz.flatten())
+        return D
 
     def __activation_function(self,x):
         if self.activation == "sigmoid":
@@ -56,6 +67,8 @@ class Layer:
             return self.__relu(x)
         elif self.activation == "linear":
             return self.__linear(x)
+        elif self.activation == "softmax":
+            return self.__softmax(x)
         else:
             assert False,"Selected activation function does not exist!"
 
@@ -66,6 +79,8 @@ class Layer:
             return self.__relu_derivative(x)
         elif self.activation == "linear":
             return self.__linear_derivative(x)
+        elif self.activation == "softmax":
+            return self.__softmax_derivative(x)
         else:
             assert False,"Selected activation function does not exist!"
 
@@ -118,6 +133,18 @@ class Layer:
     
     def updateWeightsStep(self,batch_size):
         #TODO: add regularization here!
+        """ TEST - TEST - TEST
+        z = np.dot(self.input,self.weights)+self.bias
+        print("z shape",z.shape)
+        print("Error shape",self.error.shape)
+        aaa = self.__activation_function_derivative(z)
+        bbb = self.error*aaa
+        print("ActivationFunctionDerivative shape",aaa.shape)
+        print("ErrorxAFD shape",bbb.shape)
+        print("Input shape",self.input.reshape(self.units_prev,1).shape)
+        self.weightGrad += np.dot(self.input.reshape(self.units_prev,1),bbb.reshape(1,self.units)) / batch_size
+        print("Gradient shape",self.weightGrad.shape)
+        """
         self.weightGrad += self.error * self.__activation_function_derivative(np.dot(self.input,self.weights)+self.bias) * self.input.reshape(self.units_prev,1) / batch_size
         #TODO: add dropoutMask here!
         #self.weightGrad[self.dropoutMask>0] += ...
