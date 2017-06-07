@@ -129,37 +129,45 @@ class Layer:
         self.error = newError
 
     def getError(self):
-        return self.error
+        step1 = self.__activation_function_derivative(np.dot(self.input,self.weights)+self.bias)
+        if len(step1.shape)>1:
+            step2 = np.dot(step1,self.error.reshape(self.units,1))
+        else:
+            step2 = step1 * self.error.flatten()
+        return step2
+                
     
-    def updateWeightsStep(self,batch_size):
+    def updateGradients(self,batch_size):
         #TODO: add regularization here!
-        """ TEST - TEST - TEST
-        z = np.dot(self.input,self.weights)+self.bias
-        print("z shape",z.shape)
-        print("Error shape",self.error.shape)
-        aaa = self.__activation_function_derivative(z)
-        bbb = self.error*aaa
-        print("ActivationFunctionDerivative shape",aaa.shape)
-        print("ErrorxAFD shape",bbb.shape)
-        print("Input shape",self.input.reshape(self.units_prev,1).shape)
-        self.weightGrad += np.dot(self.input.reshape(self.units_prev,1),bbb.reshape(1,self.units)) / batch_size
-        print("Gradient shape",self.weightGrad.shape)
-        """
-        self.weightGrad += self.error * self.__activation_function_derivative(np.dot(self.input,self.weights)+self.bias) * self.input.reshape(self.units_prev,1) / batch_size
+
+        step1 = self.__activation_function_derivative(np.dot(self.input,self.weights)+self.bias)
+        if len(step1.shape)>1:
+            step2 = np.dot(step1,self.error.reshape(self.units,1))
+        else:
+            step2 = step1 * self.error.flatten()
+
+        self.weightGrad += np.dot(self.input.reshape(self.units_prev,1),step2.reshape(1,self.units)) / batch_size        
+        self.biasGrad += step2.reshape(self.units) / batch_size
+
         #TODO: add dropoutMask here!
         #self.weightGrad[self.dropoutMask>0] += ...
-        self.biasGrad += self.error * self.__activation_function_derivative(np.dot(self.input,self.weights)+self.bias) / batch_size
+
         self.weightCache = 0.9 * self.weightCache + (1 - 0.9) * self.weightGrad**2
-        #self.weightCache[self.dropoutMask>0] = ...
         self.biasCache = 0.9 * self.biasCache + (1 - 0.9) * self.biasGrad**2
+
+        #TODO: add dropoutMask here!
+        #self.weightCache[self.dropoutMask>0] = ...
+
     
-    def resetWeightsStep(self):
+    def resetGradients(self):
         self.weightGrad = np.zeros([self.units_prev,self.units])
-        self.biasGrad = np.zeros([self.units])
-        self.weightCache = np.zeros([self.units_prev,self.units])
-        self.biasCache = np.zeros([self.units])
+        self.biasGrad = np.zeros([self.units])        
         self.numWeightGrad = np.zeros([self.units_prev,self.units])
         self.numBiasGrad = np.zeros([self.units])
+
+    def resetCache(self):
+        self.weightCache = np.zeros([self.units_prev,self.units])
+        self.biasCache = np.zeros([self.units])
 
     def getGradients(self):
         return self.weightGrad, self.biasGrad

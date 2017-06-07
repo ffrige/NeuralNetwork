@@ -103,9 +103,9 @@ biasGrad dbj: gradients of biases, updated as dwj += ej * f’(xj) / batch_size.
 
 *getError*(): returns the current error value ej for this layer
 
-*updateWeightsStep*(batch_size): increases the stored gradients for weights and biases according to the current error. This operation is normally executed once for each example in the batch.
+*updateGradients*(batch_size): increases the stored gradients for weights and biases according to the current error. This operation is normally executed once for each example in the batch.
 
-*resetWeightsStep*(): resets all internal stored attributes (weightGrad/biasGrad, weightCache/biasCache, numWeightGrad/numBiasGrad). This operation is normally executed at the beginning of each batch iteration.
+*resetGradients*(): resets all internal stored attributes (weightGrad/biasGrad, numWeightGrad/numBiasGrad). This operation is normally executed at the beginning of each batch iteration.
 
 *getGradients*(): returns the currently stored gradients
 
@@ -113,6 +113,7 @@ biasGrad dbj: gradients of biases, updated as dwj += ej * f’(xj) / batch_size.
 
 *getNumGradients*(): returns the stored numerical gradients for this layer
 
+*resetCache*(): resets cache used for rmsprop variant of gradient descent
 
 ----------
 NeuralNetwork Class
